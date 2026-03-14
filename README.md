@@ -1,6 +1,6 @@
 # CoreInventory
 
-A comprehensive full-stack inventory management system built with modern web technologies. This application provides complete control over product inventory, warehouse operations, stock movements, and reporting.
+A complete full-stack inventory management system constructed using contemporary web technologies. This program offers total control over stock movements, warehouse operations, product inventory, and reporting.
 
 ## Features
 
