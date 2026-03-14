@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(VIEWER)
+  resetOtp  String?
+  otpExpiry DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+  VIEWER
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                  Int       @id @default(autoincrement())
+  name                String
+  sku                 String    @unique
+  unitOfMeasure       String
+  reorderLevel        Int       @default(0)
+  categoryId          Int
+  category            Category  @relation(fields: [categoryId], references: [id])
+  stocks              Stock[]
+  receiptItems        ReceiptItem[]
+  deliveryItems       DeliveryOrderItem[]
+  transferItems       InternalTransferItem[]
+  stockAdjustments    StockAdjustment[]
+  stockLedgers        StockLedger[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model Warehouse {
+  id          Int        @id @default(autoincrement())
+  name        String
+  shortCode   String     @unique
+  address     String?
+  locations   Location[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Location {
+  id              Int       @id @default(autoincrement())
+  name            String
+  shortCode       String
+  warehouseId     Int
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  stocks          Stock[]
+  receipts        Receipt[]
+  deliveries      DeliveryOrder[]
+  sourceTransfers InternalTransfer[] @relation("SourceLocation")
+  destTransfers   InternalTransfer[] @relation("DestLocation")
+  adjustments     StockAdjustment[]
+  ledgersSource   StockLedger[] @relation("LedgerSource")
+  ledgersDest     StockLedger[] @relation("LedgerDest")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([name, warehouseId])
+}
+
+model Stock {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id])
+  locationId  Int
+  location    Location @relation(fields: [locationId], references: [id])
+  quantity    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productId, locationId])
+}
+
+model Receipt {
+  id          Int           @id @default(autoincrement())
+  reference   String        @unique
+  supplier    String?
+  status      DocStatus     @default(DRAFT)
+  locationId  Int
+  location    Location      @relation(fields: [locationId], references: [id])
+  items       ReceiptItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ReceiptItem {
+  id          Int      @id @default(autoincrement())
+  receiptId   Int
+  receipt     Receipt  @relation(fields: [receiptId], references: [id])
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+}
+
+model DeliveryOrder {
+  id          Int                 @id @default(autoincrement())
+  reference   String              @unique
+  customer    String?
+  status      DeliveryStatus      @default(DRAFT)
+  locationId  Int
+  location    Location            @relation(fields: [locationId], references: [id])
+  items       DeliveryOrderItem[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model DeliveryOrderItem {
+  id               Int           @id @default(autoincrement())
+  deliveryOrderId  Int
+  deliveryOrder    DeliveryOrder @relation(fields: [deliveryOrderId], references: [id])
+  productId        Int
+  product          Product       @relation(fields: [productId], references: [id])
+  quantity         Int
+}
+
+model InternalTransfer {
+  id               Int                    @id @default(autoincrement())
+  reference        String                 @unique
+  status           DocStatus              @default(DRAFT)
+  sourceLocId      Int
+  sourceLocation   Location               @relation("SourceLocation", fields: [sourceLocId], references: [id])
+  destLocId        Int
+  destLocation     Location               @relation("DestLocation", fields: [destLocId], references: [id])
+  items            InternalTransferItem[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+}
+
+model InternalTransferItem {
+  id                 Int              @id @default(autoincrement())
+  transferId         Int
+  transfer           InternalTransfer @relation(fields: [transferId], references: [id])
+  productId          Int
+  product            Product          @relation(fields: [productId], references: [id])
+  quantity           Int
+}
+
+model StockAdjustment {
+  id          Int           @id @default(autoincrement())
+  reference   String        @unique
+  status      DocStatus     @default(DRAFT)
+  locationId  Int
+  location    Location      @relation(fields: [locationId], references: [id])
+  productId   Int
+  product     Product       @relation(fields: [productId], references: [id])
+  countedQty  Int
+  systemQty   Int
+  difference  Int
+  reason      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model StockLedger {
+  id              Int             @id @default(autoincrement())
+  date            DateTime        @default(now())
+  productId       Int
+  product         Product         @relation(fields: [productId], references: [id])
+  operationType   OperationType
+  quantityIn      Int             @default(0)
+  quantityOut     Int             @default(0)
+  sourceLocId     Int?
+  sourceLocation  Location?       @relation("LedgerSource", fields: [sourceLocId], references: [id])
+  destLocId       Int?
+  destLocation    Location?       @relation("LedgerDest", fields: [destLocId], references: [id])
+  referenceDoc    String
+  runningBalance  Int             @default(0)
+}
+
+enum DocStatus {
+  DRAFT
+  READY
+  DONE
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  DRAFT
+  WAITING
+  READY
+  DONE
+  CANCELLED
+}
+
+enum OperationType {
+  RECEIPT
+  DELIVERY
+  TRANSFER
+  ADJUSTMENT
+}

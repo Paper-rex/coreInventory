@@ -1,0 +1,39 @@
+﻿Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "coreinventory", schema "public" at "localhost:5432"
+
+node.exe : Error: 
+P1000: Authentication 
+failed against 
+database server at 
+`localhost`, the 
+provided database 
+credentials for 
+`postgres` are not 
+valid.
+At line:1 char:1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (Error: P10   
+ 00: A... are not     
+valid.:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+
+Please make sure to 
+provide valid 
+database credentials 
+for the database 
+server at `localhost`.
