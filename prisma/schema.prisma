@@ -2,10 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
-model Test {
-  id   Int @id @default(autoincrement())
-  name String
-}
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
